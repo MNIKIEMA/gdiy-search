@@ -33,43 +33,47 @@ class AudioLoader(object):
         audio_info = {}
         audio_to_skip = ["[EXTRAIT]","[EXTRACT]","[REDIFF]"]
         data = self.load_data("https://rss.art19.com/generation-do-it-yourself")
-        for episode in tqdm(data):
+        for episode in data:
             link = episode.find("enclosure")["url"]
             title = episode.find("title").text
             episode_id = " ".join(title.split(" - ")[:-1]).replace("#", "")
             episode_id = re.sub(r'[%/!@#\*\$\?\+\^\\\\\\]', '', episode_id)
-            #print(episode_id.split())
-            episode_id = self.simplify_name(episode_id)
-            if episode_id in all_name:
-                episode_id = episode_id+"-1"
-            audio_info[episode_id] = title
-            all_name.add(episode_id)
             
             skip = [skip_audio for skip_audio in audio_to_skip if skip_audio in title]
             if not skip:
 
                 if episode_id not in self.loaded_episodes:
+                    try:
+                        episode_id = self.simplify_name(episode_id)
+                    except:
+                        print(title)
+
+                    if episode_id in all_name:
+                        episode_id = episode_id+"-1"
+                    audio_info[episode_id] = title
+                    all_name.add(episode_id)
                     #self.download_episode(link, episode_id)
                     self.update_loaded_episodes(episode_id)
-
+        
+        return audio_info
+    
+    
     def download_episode(self, episode_url, audio_name):
         audio = requests.get(episode_url)
         with open(os.path.join(self.data_path, audio_name+".mp3"), "wb") as fp:
             fp.write(audio.content)
 
-    def simplify_name(self, filename:str):
-        filename = filename.strip()
-        if filename.startswith("COVID"):
-            new_filename = "-".join(filename.split()[:2])
-        # remove the # character using regular expression
-        elif filename.lower().startswith("hors"):
-            new_filename = filename.split()
+    def simplify_name(self, file_name:str):
+        file_name = file_name.strip()
+        if file_name.startswith("COVID"):
+            new_filename = "-".join(file_name.split()[:2])
+        elif file_name.lower().startswith("hors"):
+            new_filename = file_name.split()
             new_filename = "-".join(new_filename[:2])
-        elif filename.startswith("Early"):
-            new_filename = "-".join(filename.split()[:3])
+        elif file_name.startswith("Early"):
+            new_filename = "-".join(file_name.split()[:3])
         else:
-            print("***",filename)
-            new_filename = filename.split()[0]
+            new_filename = file_name.split()[0]
         return new_filename
     
 
