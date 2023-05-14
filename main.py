@@ -3,6 +3,8 @@ import requests
 from data_scraper import AudioLoader
 from pathlib import Path
 from bs4 import BeautifulSoup
+import torch
+from transformers import pipeline
 
 def cli():
     parser = argparse.ArgumentParser()
@@ -23,8 +25,21 @@ def main():
     url = audio.find("enclosure")["url"]
     title = audio.find("title").text
     description = audio.find("description").text
+  
 
-
+  
 
 if __name__=="__main__":
-    main()
+
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    print(device)
+    pipe = pipeline(
+    "automatic-speech-recognition",
+    model="openai/whisper-large-v2",
+    chunk_length_s=30,
+    device=device,
+    )
+
+    # we can also return timestamps for the predictions
+    prediction = pipe("./data/23.mp3", batch_size=8, return_timestamps=True)["chunks"]
+    print(prediction)
