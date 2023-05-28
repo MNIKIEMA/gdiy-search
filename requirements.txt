@@ -1,0 +1,5 @@
+faiss-cpu
+langchain[llms]
+beautifulsoup4
+sentence-transformers
+transformers
